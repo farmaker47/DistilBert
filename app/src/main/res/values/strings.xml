@@ -8,4 +8,6 @@
     <string name="text_query" translatable="false">Text query</string>
     <string name="ask_question" translatable="false">Ask question</string>
     <string name="title_activity_gpt2">GPT2Activity</string>
+    <string name="offline_bert">Offline Bert</string>
+    <string name="online_gemini">Online Gemini</string>
 </resources>

@@ -94,13 +94,18 @@ public class QaActivity extends AppCompatActivity {
     adapter.setOnQuestionSelectListener(question -> answerQuestion(question));
     questionSuggestionsView.setAdapter(adapter);
     LinearLayoutManager layoutManager =
-        new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
     questionSuggestionsView.setLayoutManager(layoutManager);
 
-    // Setup ask button.
-    ImageButton askButton = findViewById(R.id.ask_button);
-    askButton.setOnClickListener(
+    // Setup ask button for Bert.
+    TextView askButtonBert = findViewById(R.id.ask_button_bert);
+    askButtonBert.setOnClickListener(
         view -> answerQuestion(questionEditText.getText().toString()));
+
+      // Setup ask button for Gemini.
+      TextView askButtonGemini = findViewById(R.id.ask_button_bert);
+      askButtonGemini.setOnClickListener(
+              view -> answerQuestion(questionEditText.getText().toString()));
 
     // Setup text edit where users can input their question.
     questionEditText = findViewById(R.id.question_edit_text);
@@ -121,9 +126,8 @@ public class QaActivity extends AppCompatActivity {
           public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             // Only allow clicking Ask button if there is a question.
             boolean shouldAskButtonActive = !charSequence.toString().isEmpty();
-            askButton.setClickable(shouldAskButtonActive);
-            askButton.setImageResource(
-                shouldAskButtonActive ? R.drawable.ic_ask_active : R.drawable.ic_ask_inactive);
+            //askButton.setClickable(shouldAskButtonActive);
+            //askButton.setImageResource(shouldAskButtonActive ? R.drawable.ic_ask_active : R.drawable.ic_ask_inactive);
           }
 
           @Override
