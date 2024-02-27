@@ -56,7 +56,7 @@ public class QaActivity extends AppCompatActivity {
 
     private static final String DATASET_POSITION_KEY = "DATASET_POSITION";
     private static final String TAG = "QaActivity";
-    private static final String API_KEY = "AIzaSyBCbkquiETwqlkD5oIp7t1kUios52w5jKM";
+    private static final String API_KEY = "AIzaSyBCbkquiETwqlkD5oIp7t1kUios52";
     private static final boolean DISPLAY_RUNNING_TIME = false;
 
     private TextInputEditText questionEditText;
