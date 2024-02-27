@@ -33,6 +33,7 @@ import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.distilbert.ml.LoadDatasetClient
@@ -42,6 +43,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.java.GenerativeModelFutures
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
@@ -55,8 +57,8 @@ class QaActivity : AppCompatActivity() {
     private var content: String? = null
     private var handler: Handler? = null
     private var qaClient: QaClient? = null
-    var gm = GenerativeModel( /* modelName */"gemini-pro", API_KEY)
-    var model = GenerativeModelFutures.from(gm)
+    var generativeModel = GenerativeModel( /* modelName */"gemini-pro", API_KEY)
+    //var model = GenerativeModelFutures.from(gm)
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.v(TAG, "onCreate")
         super.onCreate(savedInstanceState)
@@ -95,9 +97,27 @@ class QaActivity : AppCompatActivity() {
         // Setup ask button for Gemini.
         val askButtonGemini = findViewById<TextView>(R.id.ask_button_gemini)
         askButtonGemini.setOnClickListener { view: View? ->
-            answerQuestion(
-                questionEditText!!.text.toString()
-            )
+
+            var question = questionEditText!!.text.toString()
+            question = question.trim { it <= ' ' }
+            if (question.isEmpty()) {
+                questionEditText!!.setText(question)
+                return@setOnClickListener
+            }
+
+            // Append question mark '?' if not ended with '?'.stion
+            // This aligns with question format that trains the model.
+            if (!question.endsWith("?")) {
+                question += '?'
+            }
+            val questionToAsk = question
+            Log.v("Question", "$content $questionToAsk")
+            lifecycleScope.launch {
+                val returnedText = generativeModel.generateContent(content + questionToAsk)
+                // Set the result text to input text.
+                //................
+                questionEditText!!.setText(returnedText.text)
+            }
         }
 
         // Setup text edit where users can input their question.

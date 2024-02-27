@@ -101,4 +101,7 @@ dependencies {
     testImplementation("com.google.truth:truth:1.0")
     testImplementation("org.robolectric:robolectric:4.3.1")
     androidTestImplementation("androidx.test:runner:1.5.2")
+
+    // For Gemini
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
 }
