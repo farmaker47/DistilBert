@@ -89,6 +89,7 @@ class QaActivity : AppCompatActivity() {
         // Setup ask button for Bert.
         val askButtonBert = findViewById<TextView>(R.id.ask_button_bert)
         askButtonBert.setOnClickListener { view: View? ->
+            findViewById<TextView>(R.id.gemini_result).text = ""
             answerQuestion(
                 questionEditText!!.text.toString()
             )
@@ -97,6 +98,10 @@ class QaActivity : AppCompatActivity() {
         // Setup ask button for Gemini.
         val askButtonGemini = findViewById<TextView>(R.id.ask_button_gemini)
         askButtonGemini.setOnClickListener { view: View? ->
+            findViewById<TextView>(R.id.gemini_result).text = ""
+            val runningSnackbar =
+                Snackbar.make(contentTextView!!, "Connecting to Gemini Pro...", Snackbar.LENGTH_SHORT)
+            runningSnackbar.show()
 
             var question = questionEditText!!.text.toString()
             question = question.trim { it <= ' ' }
@@ -114,9 +119,14 @@ class QaActivity : AppCompatActivity() {
             Log.v("Question", "$content $questionToAsk")
             lifecycleScope.launch {
                 val returnedText = generativeModel.generateContent(content + questionToAsk)
+
+                returnedText.text?.let { Log.v("Answer", it) }
                 // Set the result text to input text.
                 //................
-                questionEditText!!.setText(returnedText.text)
+                findViewById<TextView>(R.id.gemini_result).text = returnedText.text ?: ""
+                if (textToSpeech != null) {
+                    textToSpeech!!.speak(returnedText.text ?: "", TextToSpeech.QUEUE_FLUSH, null, returnedText.text ?: "")
+                }
             }
         }
 
