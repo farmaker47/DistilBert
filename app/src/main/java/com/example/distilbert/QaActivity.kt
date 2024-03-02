@@ -121,8 +121,7 @@ class QaActivity : AppCompatActivity() {
                 val returnedText = generativeModel.generateContent(content + questionToAsk)
 
                 returnedText.text?.let { Log.v("Answer", it) }
-                // Set the result text to input text.
-                //................
+
                 findViewById<TextView>(R.id.gemini_result).text = returnedText.text ?: ""
                 if (textToSpeech != null) {
                     textToSpeech!!.speak(returnedText.text ?: "", TextToSpeech.QUEUE_FLUSH, null, returnedText.text ?: "")
