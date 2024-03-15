@@ -33,17 +33,21 @@ import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.distilbert.gemma.ChatViewModel
+import com.example.distilbert.gemma.InferenceModel
 import com.example.distilbert.ml.LoadDatasetClient
 import com.example.distilbert.ml.QaAnswer
 import com.example.distilbert.ml.QaClient
 import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.java.GenerativeModelFutures
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 /**
@@ -58,11 +62,65 @@ class QaActivity : AppCompatActivity() {
     private var handler: Handler? = null
     private var qaClient: QaClient? = null
     var generativeModel = GenerativeModel( /* modelName */"gemini-pro", API_KEY)
+    private lateinit var chatViewModel: ChatViewModel
     //var model = GenerativeModelFutures.from(gm)
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.v(TAG, "onCreate")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qa)
+
+        val askButtonGemma = findViewById<TextView>(R.id.ask_button_gemma)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val inferenceModel = InferenceModel.getInstance(this@QaActivity)
+                // Notify the UI that the model has finished loading
+                withContext(Dispatchers.Main) {
+                    askButtonGemma.visibility = View.VISIBLE
+                    chatViewModel = ChatViewModel(inferenceModel)
+
+                    // Set listener
+                    askButtonGemma.setOnClickListener {
+                        findViewById<TextView>(R.id.gemini_result).text = ""
+                        var question = questionEditText!!.text.toString()
+                        question = question.trim { it <= ' ' }
+                        if (question.isEmpty()) {
+                            questionEditText!!.setText(question)
+                            return@setOnClickListener
+                        }
+
+                        // Append question mark '?' if not ended with '?'.stion
+                        // This aligns with question format that trains the model.
+                        if (!question.endsWith("?")) {
+                            question += '?'
+                        }
+                        val questionToAsk = question
+                        Log.v("Question", "$content $questionToAsk")
+                        lifecycleScope.launch {
+
+                            chatViewModel.sendMessage(content + "\n" + questionToAsk)
+
+
+                        }
+                    }
+
+                    chatViewModel.gemmaOutput.observe(this@QaActivity, Observer { gemmaText ->
+
+                        findViewById<TextView>(R.id.gemini_result).text = ""
+                        findViewById<TextView>(R.id.gemini_result).text = gemmaText
+                        /*if (textToSpeech != null) {
+                            textToSpeech!!.speak(
+                                gemmaText ?: "",
+                                TextToSpeech.QUEUE_FLUSH,
+                                null,
+                                gemmaText ?: ""
+                            )
+                        }*/
+                    })
+                }
+            } catch (e: Exception) {
+                Log.e("Error loading", e.toString())
+            }
+        }
 
         // Get content of the selected dataset.
         val datasetPosition = intent.getIntExtra(DATASET_POSITION_KEY, -1)
