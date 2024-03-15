@@ -27,6 +27,9 @@ class ChatViewModel(
     private val _gemmaOutput: MutableLiveData<String> = MutableLiveData("")
     val gemmaOutput: LiveData<String> = _gemmaOutput
 
+    private val _outputDone: MutableLiveData<Boolean> = MutableLiveData(false)
+    val outputDone: LiveData<Boolean> = _outputDone
+
     private val _textInputEnabled: MutableStateFlow<Boolean> =
         MutableStateFlow(true)
     val isTextInputEnabled: StateFlow<Boolean> =
@@ -36,13 +39,13 @@ class ChatViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.value.addMessage(userMessage, USER_PREFIX)
             var currentMessageId: String? = _uiState.value.createLoadingMessage()
-            setInputEnabled(false)
             try {
                 val fullPrompt = _uiState.value.fullPrompt
                 inferenceModel.generateResponseAsync(fullPrompt)
                 inferenceModel.partialResults
                     .collectIndexed { index, (partialResult, done) ->
                         currentMessageId?.let {
+                            _outputDone.postValue(false)
                             Log.v("Answer", partialResult)
 
                             _gemmaOutput.postValue("${_gemmaOutput.value}$partialResult") // Concatenate the new text
@@ -55,27 +58,19 @@ class ChatViewModel(
                             if (done) {
                                 currentMessageId = null
                                 // Re-enable text input
-                                setInputEnabled(true)
+                                _outputDone.postValue(true)
                             }
                         }
                     }
             } catch (e: Exception) {
                 _uiState.value.addMessage(e.localizedMessage ?: "Unknown Error", MODEL_PREFIX)
-                setInputEnabled(true)
             }
         }
     }
 
-    private fun setInputEnabled(isEnabled: Boolean) {
-        _textInputEnabled.value = isEnabled
+    fun resetText() {
+        _gemmaOutput.postValue("")
     }
 
-    companion object {
-        fun getFactory(context: Context) = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-                val inferenceModel = InferenceModel.getInstance(context)
-                return ChatViewModel(inferenceModel) as T
-            }
-        }
-    }
+
 }

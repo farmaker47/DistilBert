@@ -81,6 +81,7 @@ class QaActivity : AppCompatActivity() {
                     // Set listener
                     askButtonGemma.setOnClickListener {
                         findViewById<TextView>(R.id.gemini_result).text = ""
+                        chatViewModel.resetText()
                         var question = questionEditText!!.text.toString()
                         question = question.trim { it <= ' ' }
                         if (question.isEmpty()) {
@@ -107,15 +108,15 @@ class QaActivity : AppCompatActivity() {
 
                         findViewById<TextView>(R.id.gemini_result).text = ""
                         findViewById<TextView>(R.id.gemini_result).text = gemmaText
-                        /*if (textToSpeech != null) {
-                            textToSpeech!!.speak(
-                                gemmaText ?: "",
-                                TextToSpeech.QUEUE_FLUSH,
-                                null,
-                                gemmaText ?: ""
-                            )
-                        }*/
                     })
+
+                    chatViewModel.outputDone.observe(this@QaActivity) { done ->
+                        if (done) {
+                            if (textToSpeech != null) {
+                                textToSpeech!!.speak(chatViewModel.gemmaOutput.value, TextToSpeech.QUEUE_FLUSH, null, chatViewModel.gemmaOutput.value)
+                            }
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("Error loading", e.toString())
