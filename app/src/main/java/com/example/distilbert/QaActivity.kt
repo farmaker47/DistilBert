@@ -216,7 +216,7 @@ class QaActivity : AppCompatActivity() {
                 }
             } else {
                 val runningSnackbar =
-                    Snackbar.make(contentTextView!!, "Get an API key and use a VPN if your country has no access to Gemini.", Snackbar.LENGTH_INDEFINITE)
+                    Snackbar.make(contentTextView!!, "Get an API key and use a VPN if your country has no access to Gemini.", Snackbar.LENGTH_LONG)
                 runningSnackbar.show()
             }
         }
