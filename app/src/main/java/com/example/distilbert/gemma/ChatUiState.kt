@@ -77,13 +77,6 @@ class GemmaUiState(
     private val _messages: MutableList<ChatMessage> = messages.toMutableStateList()
     override val messages: List<ChatMessage>
         get() = _messages
-            .map {
-                // Remove the prefix and suffix before showing a message in the UI
-                it.copy(
-                    message = it.message.replace(START_TURN + it.author + "\n", "")
-                        .replace(END_TURN, "")
-                )
-            }.reversed()
 
     // Only using the last 4 messages to keep input + output short
     override val fullPrompt: String
@@ -96,7 +89,7 @@ class GemmaUiState(
     }
 
     fun appendFirstMessage(id: String, text: String) {
-        appendMessage(id, "$START_TURN$MODEL_PREFIX\n$text", false)
+        appendMessage(id, "$text", false)
     }
 
     override fun appendMessage(id: String, text: String, done: Boolean) {
@@ -104,7 +97,7 @@ class GemmaUiState(
         if (index != -1) {
             val newText = if (done) {
                 // Append the Suffix when model is done generating the response
-                _messages[index].message + text + END_TURN
+                _messages[index].message + text
             } else {
                 // Append the text
                 _messages[index].message + text
@@ -115,7 +108,7 @@ class GemmaUiState(
 
     override fun addMessage(text: String, author: String): String {
         val chatMessage = ChatMessage(
-            message = "$START_TURN$author\n$text$END_TURN",
+            message = "$text",
             author = author
         )
         _messages.add(chatMessage)

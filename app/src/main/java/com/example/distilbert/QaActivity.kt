@@ -31,6 +31,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.InputMethodManager
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -76,11 +77,13 @@ class QaActivity : AppCompatActivity() {
                 // Notify the UI that the model has finished loading
                 withContext(Dispatchers.Main) {
                     askButtonGemma.visibility = View.VISIBLE
+                    findViewById<ProgressBar>(R.id.progress_bar).visibility = View.GONE
                     chatViewModel = ChatViewModel(inferenceModel)
 
                     // Set listener
                     askButtonGemma.setOnClickListener {
                         findViewById<TextView>(R.id.gemini_result).text = ""
+                        findViewById<ProgressBar>(R.id.progress_bar).visibility = View.VISIBLE
                         chatViewModel.resetText()
                         var question = questionEditText!!.text.toString()
                         question = question.trim { it <= ' ' }
@@ -96,11 +99,25 @@ class QaActivity : AppCompatActivity() {
                         }
                         val questionToAsk = question
                         Log.v("Question", "$content $questionToAsk")
-                        lifecycleScope.launch {
-
-                            chatViewModel.sendMessage(content + "\n" + questionToAsk)
-
-
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            val completeQuery = "Here is the context: $content\n" +
+                                    "Using the relevant information from the context \n" +
+                                    "and integrating it with your knowledge,\n" +
+                                    "provide an answer as helpful and informative bot that answers questions using text from the reference passage included below to the question: $questionToAsk.\n" +
+                                    "If the context doesn't provide\n" +
+                                    "any relevant information answer with \n" +
+                                    "[I couldn't find a good match in my\n" +
+                                    "knowledge base for your question, \n" +
+                                    "hence I answer based on my own knowledge] \\\n" +
+                                    "ANSWER:"
+                            val markQuery = "You are a helpful and informative bot that answers questions using text from the reference passage included below. Be sure to respond in a complete sentence, being comprehensive, including all relevant background information. However, you are talking to a non-technical audience, so be sure to break down complicated concepts and strike a friendly and conversational tone. If the passage is irrelevant to the answer, you may ignore it.\n" +
+                                    "\n" +
+                                    "\n" +
+                                    "QUESTION: $questionToAsk\n" +
+                                    "PASSAGE: $content\n" +
+                                    "ANSWER:"
+                            val simpleQnA = "PASSAGE: $content\n" + "QUESTION: $questionToAsk\n" + "ANSWER:"
+                            chatViewModel.sendMessage(simpleQnA)
                         }
                     }
 
@@ -112,9 +129,10 @@ class QaActivity : AppCompatActivity() {
 
                     chatViewModel.outputDone.observe(this@QaActivity) { done ->
                         if (done) {
-                            if (textToSpeech != null) {
+                            findViewById<ProgressBar>(R.id.progress_bar).visibility = View.GONE
+                            /*if (textToSpeech != null) {
                                 textToSpeech!!.speak(chatViewModel.gemmaOutput.value, TextToSpeech.QUEUE_FLUSH, null, chatViewModel.gemmaOutput.value)
-                            }
+                            }*/
                         }
                     }
                 }
@@ -175,7 +193,6 @@ class QaActivity : AppCompatActivity() {
                 question += '?'
             }
             val questionToAsk = question
-            Log.v("Question", "$content $questionToAsk")
             lifecycleScope.launch {
                 val markQuery = "You are a helpful and informative bot that answers questions using text from the reference passage included below. " +
                         "Be sure to respond in a complete sentence, being comprehensive, including all relevant background information. " +

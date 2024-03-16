@@ -1,13 +1,10 @@
 package com.example.distilbert.gemma
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +38,7 @@ class ChatViewModel(
             var currentMessageId: String? = _uiState.value.createLoadingMessage()
             try {
                 val fullPrompt = _uiState.value.fullPrompt
+                Log.v("Full_prompt", fullPrompt)
                 inferenceModel.generateResponseAsync(fullPrompt)
                 inferenceModel.partialResults
                     .collectIndexed { index, (partialResult, done) ->
@@ -50,11 +48,12 @@ class ChatViewModel(
 
                             _gemmaOutput.postValue("${_gemmaOutput.value}$partialResult") // Concatenate the new text
 
-                            if (index == 0) {
+                            /*if (index == 0) {
                                 _uiState.value.appendFirstMessage(it, partialResult)
                             } else {
                                 _uiState.value.appendMessage(it, partialResult, done)
-                            }
+                            }*/
+                            _uiState.value.appendMessage(it, partialResult, done)
                             if (done) {
                                 currentMessageId = null
                                 // Re-enable text input
