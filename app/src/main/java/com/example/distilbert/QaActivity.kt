@@ -175,43 +175,49 @@ class QaActivity : AppCompatActivity() {
         // Setup ask button for Gemini.
         val askButtonGemini = findViewById<TextView>(R.id.ask_button_gemini)
         askButtonGemini.setOnClickListener { view: View? ->
-            findViewById<TextView>(R.id.gemini_result).text = ""
-            val runningSnackbar =
-                Snackbar.make(contentTextView!!, "Connecting to Gemini Pro...", Snackbar.LENGTH_SHORT)
-            runningSnackbar.show()
+            if (API_KEY != "") {
+                findViewById<TextView>(R.id.gemini_result).text = ""
+                val runningSnackbar =
+                    Snackbar.make(contentTextView!!, "Connecting to Gemini Pro...", Snackbar.LENGTH_SHORT)
+                runningSnackbar.show()
 
-            var question = questionEditText!!.text.toString()
-            question = question.trim { it <= ' ' }
-            if (question.isEmpty()) {
-                questionEditText!!.setText(question)
-                return@setOnClickListener
-            }
-
-            // Append question mark '?' if not ended with '?'.stion
-            // This aligns with question format that trains the model.
-            if (!question.endsWith("?")) {
-                question += '?'
-            }
-            val questionToAsk = question
-            lifecycleScope.launch {
-                val markQuery = "You are a helpful and informative bot that answers questions using text from the reference passage included below. " +
-                        "Be sure to respond in a complete sentence, being comprehensive, including all relevant background information. " +
-                        "However, you are talking to a non-technical audience, so be sure to break down complicated concepts and strike a friendly and conversational tone. " +
-                        "If the passage is irrelevant to the answer, you may ignore it.\n" +
-                        "\n" +
-                        "\n" +
-                        "PASSAGE: $content\n" +
-                        "QUESTION: $questionToAsk\n" +
-                        "ANSWER:"
-                Log.v("Question", "$markQuery")
-                val returnedText = generativeModel.generateContent(markQuery)
-
-                returnedText.text?.let { Log.v("Answer", it) }
-
-                findViewById<TextView>(R.id.gemini_result).text = returnedText.text ?: ""
-                if (textToSpeech != null) {
-                    textToSpeech!!.speak(returnedText.text ?: "", TextToSpeech.QUEUE_FLUSH, null, returnedText.text ?: "")
+                var question = questionEditText!!.text.toString()
+                question = question.trim { it <= ' ' }
+                if (question.isEmpty()) {
+                    questionEditText!!.setText(question)
+                    return@setOnClickListener
                 }
+
+                // Append question mark '?' if not ended with '?'.stion
+                // This aligns with question format that trains the model.
+                if (!question.endsWith("?")) {
+                    question += '?'
+                }
+                val questionToAsk = question
+                lifecycleScope.launch {
+                    val markQuery = "You are a helpful and informative bot that answers questions using text from the reference passage included below. " +
+                            "Be sure to respond in a complete sentence, being comprehensive, including all relevant background information. " +
+                            "However, you are talking to a non-technical audience, so be sure to break down complicated concepts and strike a friendly and conversational tone. " +
+                            "If the passage is irrelevant to the answer, you may ignore it.\n" +
+                            "\n" +
+                            "\n" +
+                            "PASSAGE: $content\n" +
+                            "QUESTION: $questionToAsk\n" +
+                            "ANSWER:"
+                    Log.v("Question", "$markQuery")
+                    val returnedText = generativeModel.generateContent(markQuery)
+
+                    returnedText.text?.let { Log.v("Answer", it) }
+
+                    findViewById<TextView>(R.id.gemini_result).text = returnedText.text ?: ""
+                    if (textToSpeech != null) {
+                        textToSpeech!!.speak(returnedText.text ?: "", TextToSpeech.QUEUE_FLUSH, null, returnedText.text ?: "")
+                    }
+                }
+            } else {
+                val runningSnackbar =
+                    Snackbar.make(contentTextView!!, "Get an API key and use a VPN if your country has no access to Gemini.", Snackbar.LENGTH_INDEFINITE)
+                runningSnackbar.show()
             }
         }
 
